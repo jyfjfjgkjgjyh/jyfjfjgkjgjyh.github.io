@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>寻找你的女性主义精神坐标</title>
+    <script src="https://fastly.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
+    <script src="https://fastly.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://fastly.jsdelivr.net/npm/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://fastly.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://fastly.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+    <style>
+        :root {
+            --bg: #f8e8ee;
+            --text: #4a2c35;
+            --accent: #d68a9f;
+        }
+        body {
+            font-family: 'Noto Serif SC', Georgia, serif;
+            background: #f8e8ee;
+            color: var(--text);
+            margin: 0;
+            padding-bottom: 90px;
+        }
+        .container {
+            max-width: 420px;
+            margin: 0 auto;
+            padding: 24px 20px;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        .abstract-lines {
+            position: absolute;
+            top: 52%;                    /* 向下移动两个标题高度左右 */
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 240px;
+            height: 240px;
+            background: 
+                radial-gradient(circle, rgba(214,138,159,0.12) 0%, transparent 70%),
+                linear-gradient(45deg, transparent 40%, rgba(214,138,159,0.08) 50%, transparent 60%),
+                linear-gradient(-45deg, transparent 40%, rgba(214,138,159,0.08) 50%, transparent 60%);
+            border: 1px solid rgba(214,138,159,0.15);
+            border-radius: 50%;
+            opacity: 0.75;
+            z-index: -1;
+        }
+
+        .title-line1 {
+            font-size: 2.1rem;
+            font-weight: 300;
+            letter-spacing: 0.05em;
+            margin-top: 80px;            /* 标题位置微调，确保不与图案重叠 */
+        }
+        .title-line2 {
+            font-size: 2.65rem;
+            font-weight: 700;
+            color: var(--accent);
+            line-height: 1.05;
+        }
+
+        .question-title {
+            font-style: italic;
+            font-size: 1.45rem;
+            line-height: 1.35;
+            color: var(--accent);
+            margin-bottom: 28px;
+        }
+
+        .option-btn {
+            transition: all 0.35s ease;
+            background: rgba(255,255,255,0.95);
+            border: 1px solid #e8d0db;
+            border-radius: 20px;
+            padding: 18px 20px;
+            text-align: left;
+            width: 100%;
+        }
+        .option-btn:hover {
+            transform: translateY(-3px);
+            border-color: var(--accent);
+            box-shadow: 0 12px 25px rgba(214,138,159,0.12);
+        }
+
+        .footer-logo {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(248,232,238,0.96);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid #e8d0db;
+            padding: 14px 20px 10px;
+            text-align: center;
+            z-index: 100;
+            font-size: 13px;
+        }
+        .footer-logo .top { font-size: 11px; color: #b87a8f; letter-spacing: 1px; }
+        .footer-logo .middle { font-weight: 700; color: var(--accent); font-size: 15.5px; }
+        .footer-logo .bottom { font-size: 12.5px; color: #b87a8f; margin-top: 3px; }
+
+        .page-number {
+            position: absolute;
+            top: 26px;
+            right: 24px;
+            font-size: 14px;
+            color: #b87a8f;
+            font-weight: 300;
+        }
+
+        .start-btn {
+            background: white;
+            color: var(--accent);
+            border: 2px solid var(--accent);
+            border-radius: 9999px;
+            padding: 16px 48px;
+            font-size: 1.25rem;
+            font-weight: 600;
+            box-shadow: 0 10px 20px rgba(214,138,159,0.15);
+            transition: all 0.3s ease;
+        }
+        .start-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 25px rgba(214,138,159,0.25);
+        }
+
+        .restart-btn {
+            background: #d68a9f;
+            color: white;
+            border: none;
+            border-radius: 9999px;
+            padding: 18px 40px;
+            font-size: 1.15rem;
+            font-weight: 600;
+            box-shadow: 0 8px 20px rgba(214,138,159,0.25);
+            transition: all 0.3s ease;
+        }
+        .restart-btn:hover {
+            background: #c56a88;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div id="root" class="container"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        const ARCHETYPES = {
+            A: { 
+                name: "独行奋斗者", type: "自由主义女性主义", 
+                detailed: "你是典型的行动派，相信个人英雄主义。在你的认知里，女性主义的终极目标是“消除障碍”。你追求的是一个“不分性别，只论强弱”的竞技场。你注重效率、体面和程序正义。你更倾向于通过成为行业的佼佼者、掌握经济话语权来获得自由。在职场中，你是不卑不亢、用数据说话的骨干；在感情中，你要求绝对的契约精神和经济独立。你可能会反感“受害者心态”，认为与其抱怨制度，不如让自己变强。",
+                stats: [85, 30, 40, 25], 
+                quote: "规则内的突围，是我对平等最强力的证明。",
+                books: ["《一间自己的房间》——弗吉尼亚·伍尔夫", "《向前一步》——谢丽尔·桑德伯格"],
+                movies: ["《铁娘子：坚固柔情》", "《隐藏人物》"],
+                color: "#d68a9f"
+            },
+            B: { 
+                name: "解构先锋", type: "激进女性主义", 
+                detailed: "你拥有最高频的觉醒雷达，能瞬间识别出社会文化中潜藏的父权诡计。你拒绝“温情脉脉的陷阱”，比如所谓的保护、赞美或审美。你主张彻底的“主体性重建”。对你来说，女性主义不是请客吃饭，而是一场夺回身体主权、生育主权和话语权的革命。你可能会在饭桌上因为一个性别歧视的笑话愤然离席；你会为了拒绝“白幼瘦”审美而保留最原始的身体状态。你极度重视姐妹情谊，认为女性之间的联合是推翻不公的唯一力量。",
+                stats: [25, 90, 35, 40], 
+                quote: "如果不拆掉那座压迫的房子，我们永远只是在别人的屋檐下避雨。",
+                books: ["《厌女》——上野千鹤子", "《性政治》——凯特·米利特"],
+                movies: ["《末路狂花》", "《前程似锦的女孩》"],
+                color: "#c56a88"
+            },
+            C: { 
+                name: "结构观察者", type: "社会主义/唯物主义女性主义", 
+                detailed: "你是一位清醒的唯物主义者。你认为性别问题从来不是孤立的，它与资本、阶级、劳动分配紧密相连。你最关心的不是某个女明星是否得到了平等，而是底层保洁阿姨、农村妇女、带薪育儿假等涉及生存根基的问题。你相信改变世界需要集体的力量，而不仅仅是精英的崛起。你是一个极具社会责任感的人，甚至有些忧国忧民。你买东西时会思考背后的剥削，看新闻时会分析权力运作逻辑。你务实、严谨，尊重劳动，认为“家务劳动社会化”比“女性买个包奖励自己”重要得多。",
+                stats: [40, 35, 90, 30], 
+                quote: "没有全人类的解放，就没有女性真正的自由。",
+                books: ["《凯列班与女巫》——西尔维娅·费德里奇", "《从零开始的女性主义》——上野千鹤子"],
+                movies: ["《罗马》", "《诺玛·蕾》"],
+                color: "#b87a8f"
+            },
+            D: { 
+                name: "存在行者", type: "后现代/存在主义/务实主义", 
+                detailed: "你深受后现代思潮影响，认为“女性”这个标签本身就是可以解构的。你追求的是“绝对的自洽”。你既可以享受精致的妆容，也可以在第二天素面朝天，只要那是你此时此刻的真实欲望。你认为身份是流动的，你拒绝被任何教条（包括女性主义教条）绑架。你是朋友圈里最随性、最有灵气的那个。你擅长“策略性生活”，在现有的裂缝中寻找快乐。你认为与其争论对错，不如把自己的生活过成一件艺术品。你推崇多元化，尊重每一个个体的生活选择。",
+                stats: [30, 45, 35, 85], 
+                quote: "我即是我自己的定义，生活不需要向任何主义交卷。",
+                books: ["《第二性》——西蒙娜·德·波伏瓦", "《奥兰多》——弗吉尼亚·伍尔夫"],
+                movies: ["《可怜的东西》", "《坠落的审判》"],
+                color: "#e89ab3"
+            }
+        };
+
+        const QUESTIONS = [
+            {id:1, text:"未来畅想：如何解决生育对女性职业发展的影响？", options:[
+                {text:"A. 完善产假制度和反歧视法律，保障女性带薪休假权力。", type:"A"},
+                {text:"B. 打破生育是女性个人责任的思维，要求男性和职场共同承担后果。", type:"B"},
+                {text:"C. 由社会/国家承担育儿成本，防止资本家将压力转嫁给女性员工。", type:"C"},
+                {text:"D. 反对将女性身体工具化，倡导职场评价体系彻底脱离生育状态。", type:"D"}
+            ]},
+            {id:2, text:"你认为“女性特质”更属于？", options:[
+                {text:"A. 自然界赋予的独有优势，应被尊重并发挥其在社会中的独特作用。", type:"A"},
+                {text:"B. 父权制为限制女性而强加的枷锁，是温情的陷阱，需要彻底摒弃。", type:"B"},
+                {text:"C. 资本主义分工下被塑造的“家庭角色”，本质是无偿劳动的包装。", type:"C"},
+                {text:"D. 一种可以被自我定义的“表演”，女性有权选择展示或隐藏它。", type:"D"}
+            ]},
+            {id:3, text:"普通父权制下的农村妇女怎样做才是真正对自己好的选择？", options:[
+                {text:"A. 搞好家庭关系，以柔克刚，在现有裂缝中获得立足之地。", type:"A"},
+                {text:"B. 努力反抗并逃离，去城市寻找机会，哪怕意味着切断旧联系。", type:"B"},
+                {text:"C. 学习微小技能实现经济独立，并尽力托举女儿改变命运。", type:"C"},
+                {text:"D. 接受命运的局限，但在精神上保持独立，不被苦难彻底同化。", type:"D"}
+            ]},
+            {id:4, text:"你认为女性可以做到彻底推翻“父权制”吗？", options:[
+                {text:"A. 可以，通过立法和教育的演进，我们会迎来真正的性别平等。", type:"A"},
+                {text:"B. 可以，但我接受这一代女性必须付出的剧烈变革代价。", type:"B"},
+                {text:"C. 只有先解决阶级和生产资料分配问题，父权制才会随之崩塌。", type:"C"},
+                {text:"D. 不可以，与其幻想推翻，不如在复杂的权力网中找到共生与对抗。", type:"D"}
+            ]},
+            {id:5, text:"对于“雌竞”现象，你的看法是？", options:[
+                {text:"A. 人性中本就有竞争，没必要凡事都上升到性别政治高度。", type:"A"},
+                {text:"B. 它是父权制“分而治之”的诡计，让女性在内耗中丧失团结。", type:"B"},
+                {text:"C. 是资源匮乏导致的生存策略，重点应是改变资源分配的不均。", type:"C"},
+                {text:"D. 每个人都有选择竞争的自由，只要不伤及基本的底线即可。", type:"D"}
+            ]},
+            {id:6, text:"关于电影《芭比》，你认为：", options:[
+                {text:"A. 它是优秀的女性启蒙教材，让更多人开始思考平等。", type:"A"},
+                {text:"B. 它过于温和，甚至通过商业化消解了真正的女性主义愤怒。", type:"B"},
+                {text:"C. 它揭示了消费主义如何收编女性意识，本质仍是资本的游戏。", type:"C"},
+                {text:"D. 它是女性夺回叙事权的趣味尝试，解构了传统的英雄梦。", type:"D"}
+            ]},
+            {id:7, text:"关于Pornography（情色作品），你接近哪种观点？", options:[
+                {text:"A. 只要是成年人自愿且合法的娱乐，就属于个人自由。", type:"A"},
+                {text:"B. 它是对女性身体的制度化剥削，助长了现实中的性暴力。", type:"B"},
+                {text:"C. 它反映了性产业中严重的阶级压迫和贫困女性的无奈。", type:"C"},
+                {text:"D. 重点在于谁掌握镜头，女性应创作属于自己的情欲叙事。", type:"D"}
+            ]},
+            {id:8, text:"关于女演员，你更希望：", options:[
+                {text:"A. 业务能力（演技）是唯一标准，漂亮只是加分项。", type:"A"},
+                {text:"B. 拒绝白幼瘦审美，希望看到更多具有生命力的原始女性形象。", type:"B"},
+                {text:"C. 关注她们的薪资平等和生育后的复出环境，而非外貌。", type:"C"},
+                {text:"D. 鼓励各种类型的女性大胆占领屏幕，挤压传统的男性叙事空间。", type:"D"}
+            ]},
+            {id:9, text:"女性自由最重要的含义是免于被干涉，还是有能力去追求？", options:[
+                {text:"A. 免于被干涉，这是基本的人权底线。", type:"A"},
+                {text:"B. 有能力去追求，因为被困在笼子里的人谈不上干涉。", type:"B"},
+                {text:"C. 两者皆是，且必须有经济基础作为支撑才有谈论的资格。", type:"C"},
+                {text:"D. 自由是精神的绝对独立，不取决于外界的干涉或能力。", type:"D"}
+            ]},
+            {id:10, text:"女性内部“厌童”现象的本质是？", options:[
+                {text:"A. 对社会被迫转嫁给个体的养育压力的一种心理反弹。", type:"A"},
+                {text:"B. 对“母职”这一父权同盟身份的生理性恐惧与排斥。", type:"B"},
+                {text:"C. 意识到孩子可能成为女性追求自我实现的“枷锁”。", type:"C"},
+                {text:"D. 仅仅是个人的生活方式选择，不应被过度解读为政治。", type:"D"}
+            ]},
+            {id:11, text:"女性公开谈论性需求是否会加剧性别对立？", options:[
+                {text:"A. 可能会，所以表达时需要注意方式方法，追求体面的沟通。", type:"A"},
+                {text:"B. 所谓的对立是夺回主权的阵痛，女性不应为此感到羞愧。", type:"B"},
+                {text:"C. 性需求常被资本包装成消费陷阱，应警惕被二次物化。", type:"C"},
+                {text:"D. 性是流动的个人体验，公开谈论是解构性禁忌的必要过程。", type:"D"}
+            ]},
+            {id:12, text:"女性穿着打扮的自主权是否应受“得体标准”束缚？", options:[
+                {text:"A. 在公共场合应尊重基本礼仪，但审美应是自由的。", type:"A"},
+                {text:"B. “得体”往往是父权审美对女性身体的剪裁，应大胆冒犯。", type:"B"},
+                {text:"C. 穿衣自由是假象，阶级和消费能力决定了你的“审美阶梯”。", type:"C"},
+                {text:"D. 我想穿什么就穿什么，这种快乐本身就是一种微小的反叛。", type:"D"}
+            ]},
+            {id:13, text:"你希望成为独一无二的女性，还是被模仿的存在？", options:[
+                {text:"A. 独一无二，我只想定义我自己的人生（个人主义）。", type:"A"},
+                {text:"B. 被模仿，我希望我的路径能为更多姐妹提供力量（先锋意识）。", type:"B"},
+                {text:"C. 平凡就好，与其塑造偶像，不如推动群体的整体进步。", type:"C"},
+                {text:"D. 无论哪种，只要我感到自洽和舒适即可。", type:"D"}
+            ]},
+            {id:14, text:"你希望在后代眼中拥有什么样的标签？", options:[
+                {text:"A. 一个勇敢追求梦想、工作生活平衡的独立女性。", type:"A"},
+                {text:"B. 一个不向旧世界低头、为后来者开路的革命者。", type:"B"},
+                {text:"C. 一个清醒看待世俗、努力争取公平的守护者。", type:"C"},
+                {text:"D. 一个活得精彩、没被任何标签束缚过的自由灵魂。", type:"D"}
+            ]},
+            {id:15, text:"女性的主体性应优先于性别身份存在吗？", options:[
+                {text:"A. 是的，作为“人”的自我认知应是所有身份的根基。", type:"A"},
+                {text:"B. 不，性别身份是压迫的来源，忽视它会削弱反抗的力量。", type:"B"},
+                {text:"C. 两者不可分割，阶级身份往往比性别身份更决定主体的处境。", type:"C"},
+                {text:"D. 身份是流动的，根据不同的语境，我可以侧重不同的自我。", type:"D"}
+            ]},
+            {id:16, text:"能否做到在所有事件上，将女性角色替换为男性来重新审视？", options:[
+                {text:"A. 这已成为我的下意识反应，以此来检测隐藏的歧视。", type:"A"},
+                {text:"B. 偶尔在情感纠纷中会这么想，但男女处境毕竟不同。", type:"B"},
+                {text:"C. 无需替换，女性的存在有其独立的语境，不应以男性为参照。", type:"C"},
+                {text:"D. 这种逻辑实验很有趣，能帮我识破很多“理所应当”的谎言。", type:"D"}
+            ]},
+            {id:17, text:"回顾一生，你认为你更像一棵树还是一颗种子？", options:[
+                {text:"A. 一棵树：在既定的社会土壤中努力扎根，向上生长。", type:"A"},
+                {text:"B. 一颗种子：永远带着破土而出的原始冲动，挑战边界。", type:"B"},
+                {text:"C. 树上的果实：我的价值在于对世界的贡献和对后代的养育。", type:"C"},
+                {text:"D. 随风的落叶：不强求结果，只求经历过、存在过。", type:"D"}
+            ]},
+            {id:18, text:"人的成长是向社会妥协的过程，女性主义也是如此吗？", options:[
+                {text:"A. 是的，智慧的妥协是为了更好地实现长远目标。", type:"A"},
+                {text:"B. 不是，女性主义的核心就是拒绝不合理的妥协。", type:"B"},
+                {text:"C. 成长是认清社会分配逻辑的过程，女性主义是博弈的筹码。", type:"C"},
+                {text:"D. 每个人都有自己的生存节奏，妥协与否取决于个人底线。", type:"D"}
+            ]},
+            {id:19, text:"是否曾为了女性主义原则，付出过实打实的代价？", options:[
+                {text:"A. 还没有，我倾向于在规则内保护自己，稳步推进。", type:"A"},
+                {text:"B. 有过，比如拒绝一份有性别歧视的高薪工作或结束一段压抑的关系。", type:"B"},
+                {text:"C. 在日常琐碎中通过抗争分担家务或争取权益，本身就是代价。", type:"C"},
+                {text:"D. 原则应服务于生活，如果代价大到摧毁生活，我会重新评估。", type:"D"}
+            ]},
+            {id:20, text:"越早意识到性别差异，越容易成为激进女权主义者？", options:[
+                {text:"A. 不一定，也可能更早学会适应规则并利用规则。", type:"A"},
+                {text:"B. 很有可能，因为更早看透了不公的本质，愤怒更纯粹。", type:"B"},
+                {text:"C. 关键不在于时间早晚，而在于是否接触到了科学的理论分析。", type:"C"},
+                {text:"D. 觉醒是一个持续的过程，每个阶段都有不同的认知高度。", type:"D"}
+            ]},
+            {id:21, text:"你认为性别不平等的主要根源是：", options:[
+                {text:"A. 法律制度的不健全和历史遗留的观念偏差。", type:"A"},
+                {text:"B. 系统性的父权制压迫，旨在剥夺女性的身体和资源。", type:"B"},
+                {text:"C. 资本主义生产关系下的阶级压迫，女性是“底层的底层”。", type:"C"},
+                {text:"D. 生理性差异被过度政治化，导致了人为的社会隔阂。", type:"D"}
+            ]},
+            {id:22, text:"你最关注的性别议题是：", options:[
+                {text:"A. 职场玻璃天花板与同工同酬。", type:"A"},
+                {text:"B. 性暴力预防与女性身体的绝对自主。", type:"B"},
+                {text:"C. 无偿家务劳动的社会化与补偿。", type:"C"},
+                {text:"D. 多元性别认同与对传统性别二元论的挑战。", type:"D"}
+            ]},
+            {id:23, text:"如果有机会改变世界，你更愿意：", options:[
+                {text:"A. 实现绝对的程序正义和机会平等。", type:"A"},
+                {text:"B. 彻底解构父权逻辑，建立以女性视角为主导的新文明。", type:"B"},
+                {text:"C. 消灭阶级差异，让资源按需分配，从根本上消除剥削。", type:"C"},
+                {text:"D. 保持多样性，让每个人都能找到适合自己的生活生态位。", type:"D"}
+            ]},
+            {id:24, text:"如何看待对男友使用“夹子音”的行为？", options:[
+                {text:"A. 调情手段而已，女性有表达可爱和温柔的自由。", type:"A"},
+                {text:"B. 一种无意识的低幼化示弱，迎合了父权制的审美期待。", type:"B"},
+                {text:"C. 情感劳动的表现，试图以此换取更多的情绪回馈或资源。", type:"C"},
+                {text:"D. 只要自己觉得好玩，这就是一种声音的趣味实验。", type:"D"}
+            ]},
+            {id:25, text:"你最想看到的女性主角电影情节是？", options:[
+                {text:"A. 女性通过拼搏最终在男性主导的领域获得至高荣誉。", type:"A"},
+                {text:"B. 一群女性建立了一个没有男性的乌托邦社群。", type:"B"},
+                {text:"C. 女性在看清生活真相后，依然热爱并努力建设社会。", type:"C"},
+                {text:"D. 并没有特定情节，只要是真实、复杂、不被定义的女性即可。", type:"D"}
+            ]},
+            {id:26, text:"刷到“女人要对自己好一点，买个包奖励自己”时，你的内心OS：", options:[
+                {text:"A. 没错，我有钱我任性，消费是我掌控生活的奖赏。", type:"A"},
+                {text:"B. 消费主义圈套，再次将女性价值与物欲和外在绑定。", type:"B"},
+                {text:"C. 资本家收割女性的常用话术，掩盖了更深层次的分配问题。", type:"C"},
+                {text:"D. 偶尔买买挺快乐，但不能把它当成解决人生问题的药方。", type:"D"}
+            ]},
+            {id:27, text:"伴侣单方面享受你的“情绪价值”时，你会：", options:[
+                {text:"A. 找他谈谈，要求他学会共情和对等付出。", type:"A"},
+                {text:"B. 果断离开，拒绝在一段损耗自我的关系中当“情绪垃圾桶”。", type:"B"},
+                {text:"C. 反思这段关系是否成了另一种形式的“家庭内部剥削”。", type:"C"},
+                {text:"D. 策略性停止付出，观察他的反应，再决定下一步行动。", type:"D"}
+            ]},
+            {id:28, text:"关于“白幼瘦”审美和医美广告：", options:[
+                {text:"A. 支持变美自由，医美是科技进步带给女性的选择权。", type:"A"},
+                {text:"B. 这是对女性身体的暴力修剪，本质是审美上的奴役。", type:"B"},
+                {text:"C. 这种审美增加了职场生存的隐形门槛，是残酷的内卷。", type:"C"},
+                {text:"D. 审美应当多元，我更推崇健康、自然、有个性的美。", type:"D"}
+            ]},
+            {id:29, text:"社交媒体上女性对女性身材的吹捧（如“姐姐好辣”）：", options:[
+                {text:"A. 是女性间打破雌竞、互相赞赏的温暖表现。", type:"A"},
+                {text:"B. 仍未跳出男权审美框架，只是换了个夸赞者。", type:"B"},
+                {text:"C. 表象是夸赞，内核可能包含对特定消费符号的崇拜。", type:"C"},
+                {text:"D. 挺好的，这至少说明审美权在向女性群体内部转移。", type:"D"}
+            ]},
+            {id:30, text:"你幻想中的完美社会：", options:[
+                {text:"A. 性别不再成为升学、求职和生活的任何阻碍。", type:"A"},
+                {text:"B. “女性”成为一种骄傲的、具有强大生命力的主体力量。", type:"B"},
+                {text:"C. 劳动不再分性别贵贱，所有人的生存压力都降到最低。", type:"C"},
+                {text:"D. 不存在“完美社会”，只有不断博弈、不断进化的平衡。", type:"D"}
+            ]},
+            {id:31, text:"职场遇到“女性太情绪化”的论调，你会：", options:[
+                {text:"A. 用优秀的业绩直接打脸，证明这种偏见是错的。", type:"A"},
+                {text:"B. 严厉反驳，指出这是典型的性别歧视和刻板印象。", type:"B"},
+                {text:"C. 分析这种论调背后的权力结构，联合同事共同抵制。", type:"C"},
+                {text:"D. 反问：“你这种基于偏见的断言，算不算一种情绪化？”", type:"D"}
+            ]},
+            {id:32, text:"你是否想过生一个孩子？", options:[
+                {text:"A. 想过，前提是事业和家庭能平衡，且有好的物质条件。", type:"A"},
+                {text:"B. 拒绝生育，不愿让身体和人生被生育行为所束缚。", type:"B"},
+                {text:"C. 如果社会能提供更好的养育支持体系，我会考虑。", type:"C"},
+                {text:"D. 生不生由我决定，这取决于我当时对生命的感悟。", type:"D"}
+            ]},
+            {id:33, text:"“女权”这个词在你眼里：", options:[
+                {text:"A. 是追求平等权利的旗帜，虽然常被误解但很正当。", type:"A"},
+                {text:"B. 是战斗的号角，必须大声喊出来，对抗失声。", type:"B"},
+                {text:"C. 是分析社会的工具，帮我们看清权力运行的本质。", type:"C"},
+                {text:"D. 是一个标签，重要的一直是行动，而不是名字。", type:"D"}
+            ]},
+            {id:34, text:"女性穿着暴露被骚扰，责任在：", options:[
+                {text:"A. 100%在骚扰者，法律必须严惩。", type:"A"},
+                {text:"B. 在骚扰者，但社会也应反思对女性的长期物化教育。", type:"B"},
+                {text:"C. 责任在骚扰者，但也反映了公共安全和性别隔离的问题。", type:"C"},
+                {text:"D. 责任在骚扰者，但女性需要掌握更多自我防御的技能和意识。", type:"D"}
+            ]},
+            {id:35, text:"跨性别议题对你来说：", options:[
+                {text:"A. 尊重个人选择，追求权利平等是所有人的共识。", type:"A"},
+                {text:"B. 需谨慎对待，要确保这不会侵蚀传统女性的安全边界。", type:"B"},
+                {text:"C. 压迫是相通的，所有被父权制边缘化的群体应站在一起。", type:"C"},
+                {text:"D. 性别本来就是流动的，不应被简单的二元论束缚。", type:"D"}
+            ]},
+            {id:36, text:"关于“温柔”“善解人意”：", options:[
+                {text:"A. 这是女性的优良美德，不应被女性主义全盘否定。", type:"A"},
+                {text:"B. 被污名化的词汇，往往被用来道德绑架，我持保留态度。", type:"B"},
+                {text:"C. 它是社会化的产物，女性可以拥有它，但不应是必须。", type:"C"},
+                {text:"D. 温柔是一种强大的选择权，我选择对谁温柔。", type:"D"}
+            ]},
+            {id:37, text:"老板说“这个项目让小尹负责，她细心”，你的反应：", options:[
+                {text:"A. 被认可了很开心，细心确实是我的工作优势。", type:"A"},
+                {text:"B. 警惕这种性别标签，我会强调我的专业能力和决策力。", type:"B"},
+                {text:"C. 观察这是否意味着我被安排了更多琐碎但不出彩的工作。", type:"C"},
+                {text:"D. 接下项目，并展示出不仅细心、更有统筹全局的领袖气场。", type:"D"}
+            ]}
+        ];
+
+        function App() {
+            const [step, setStep] = useState('welcome');
+            const [currentQuestion, setCurrentQuestion] = useState(0);
+            const [scores, setScores] = useState({ A:0, B:0, C:0, D:0 });
+            const [history, setHistory] = useState([]);
+            const [result, setResult] = useState(null);
+            const radarRef = useRef(null);
+            const chartRef = useRef(null);
+            const captureRef = useRef(null);
+
+            const handleAnswer = (type) => {
+                const newScores = {...scores};
+                newScores[type] = (newScores[type] || 0) + 1;
+                setHistory([...history, {scores, currentQuestion}]);
+                setScores(newScores);
+
+                if (currentQuestion < QUESTIONS.length - 1) {
+                    setCurrentQuestion(currentQuestion + 1);
+                } else {
+                    const topType = Object.keys(newScores).reduce((a,b) => newScores[a] > newScores[b] ? a : b);
+                    setResult(ARCHETYPES[topType]);
+                    setStep('result');
+                }
+            };
+
+            const handleBack = () => {
+                if (history.length > 0) {
+                    const last = history[history.length-1];
+                    setScores(last.scores);
+                    setCurrentQuestion(last.currentQuestion);
+                    setHistory(history.slice(0,-1));
+                } else setStep('welcome');
+            };
+
+            const handleRestart = () => {
+                setStep('welcome');
+                setCurrentQuestion(0);
+                setScores({ A:0, B:0, C:0, D:0 });
+                setHistory([]);
+                setResult(null);
+            };
+
+            useEffect(() => {
+                if (step === 'result' && result && radarRef.current) {
+                    if (chartRef.current) chartRef.current.destroy();
+                    const ctx = radarRef.current.getContext('2d');
+                    chartRef.current = new Chart(ctx, {
+                        type: 'radar',
+                        data: {
+                            labels: ['自由主义', '激进主义', '社会主义', '后现代/存在主义'],
+                            datasets: [{ data: result.stats, backgroundColor: 'rgba(214,138,159,0.12)', borderColor: result.color, borderWidth: 3 }]
+                        },
+                        options: { scales: { r: { min:0, max:100, ticks:{display:false} } }, plugins: { legend: { display: false } } }
+                    });
+                }
+            }, [step, result]);
+
+            // 欢迎页：图案向下移动，按钮在其下方
+            if (step === 'welcome') {
+                return React.createElement('div', {className:"min-h-screen flex flex-col items-center text-center px-6 relative"},
+                    React.createElement('div', {className:"abstract-lines"}),
+                    React.createElement('div', {className:"title-line1 mb-3 mt-12"}, "寻找你的"),
+                    React.createElement('div', {className:"title-line2 mb-12"}, "女性主义精神坐标"),
+                    React.createElement('button', {
+                        onClick: () => setStep('quiz'),
+                        className:"start-btn mt-auto mb-8"
+                    }, "开始探索")
+                );
+            }
+
+            // 测试页
+            if (step === 'quiz') {
+                return React.createElement('div', {className:"relative"},
+                    React.createElement('div', {className:"page-number"}, `${currentQuestion + 1}/${QUESTIONS.length}`),
+                    React.createElement('h2', {className:"question-title"}, QUESTIONS[currentQuestion].text),
+                    React.createElement('div', {className:"space-y-4 mt-8"},
+                        QUESTIONS[currentQuestion].options.map((opt, i) =>
+                            React.createElement('button', {
+                                key: i,
+                                onClick: () => handleAnswer(opt.type),
+                                className:"option-btn text-left text-[17px]"
+                            }, opt.text)
+                        )
+                    ),
+                    React.createElement('div', {className:"footer-logo"},
+                        React.createElement('div', {className:"top"}, "Tropical Poetry Collection"),
+                        React.createElement('div', {className:"middle"}, "热带诗集"),
+                        React.createElement('div', {className:"bottom"}, "枝探天际，自成宇宙")
+                    )
+                );
+            }
+
+            // 结果页（无白底框）
+            if (step === 'result' && result) {
+                return React.createElement('div', {ref: captureRef, className:"max-w-[420px] mx-auto px-6 py-12"},
+                    React.createElement('div', {className:"text-center mb-10"},
+                        React.createElement('div', {className:"title-line1"}, "你的女性主义精神坐标"),
+                        React.createElement('h2', {className:"text-4xl font-light mt-3 text-[#d68a9f]"}, result.name),
+                        React.createElement('p', {className:"text-[#d68a9f] mt-1 text-lg"}, result.type)
+                    ),
+                    React.createElement('div', {className:"p-8"},
+                        React.createElement('canvas', {ref: radarRef})
+                    ),
+                    React.createElement('div', {className:"mt-12 px-4"},
+                        React.createElement('p', {className:"italic text-xl leading-relaxed"}, `"${result.quote}"`),
+                        React.createElement('div', {className:"mt-10"},
+                            React.createElement('h4', {className:"font-bold text-lg mb-4 text-[#d68a9f]"}, "详细解析"),
+                            React.createElement('p', {className:"text-[15px] leading-relaxed"}, result.detailed)
+                        ),
+                        React.createElement('div', {className:"mt-12"},
+                            React.createElement('h4', {className:"font-bold text-lg mb-4 text-[#d68a9f]"}, "推荐阅读与观影"),
+                            React.createElement('div', {className:"space-y-6 text-sm"},
+                                React.createElement('div', {},
+                                    React.createElement('p', {className:"font-medium"}, "文学作品"),
+                                    React.createElement('ul', {className:"mt-3 space-y-1"}, 
+                                        result.books.map(b => React.createElement('li', {key:b}, "• " + b))
+                                    )
+                                ),
+                                React.createElement('div', {},
+                                    React.createElement('p', {className:"font-medium"}, "电影作品"),
+                                    React.createElement('ul', {className:"mt-3 space-y-1"}, 
+                                        result.movies.map(m => React.createElement('li', {key:m}, "• " + m))
+                                    )
+                                )
+                            )
+                        )
+                    ),
+                    React.createElement('div', {className:"flex justify-center mt-16"},
+                        React.createElement('button', {
+                            onClick: handleRestart,
+                            className:"restart-btn px-16 py-6"
+                        }, "重新开始")
+                    ),
+                    React.createElement('div', {className:"footer-logo"},
+                        React.createElement('div', {className:"top"}, "Tropical Poetry Collection"),
+                        React.createElement('div', {className:"middle"}, "热带诗集"),
+                        React.createElement('div', {className:"bottom"}, "枝探天际，自成宇宙")
+                    )
+                );
+            }
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(React.createElement(App));
+    </script>
+</body>
+</html>
